@@ -6,10 +6,11 @@ from datetime import date, datetime
 app = Flask(__name__)
 CORS(app)
 
-app.config['MYSQL_HOST']        = 'localhost'
+app.config['MYSQL_HOST']        = 'junction.proxy.rlwy.net'
 app.config['MYSQL_USER']        = 'root'
-app.config['MYSQL_PASSWORD']    = ''
-app.config['MYSQL_DB']          = 'smart_attendance'
+app.config['MYSQL_PASSWORD']    = 'adviWiOOhiMHKGeXoLIDpabzFJiXnxMV'
+app.config['MYSQL_DB']          = 'railway'
+app.config['MYSQL_PORT']        = 44293
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
