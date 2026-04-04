@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Attendance System | Student-Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{background:linear-gradient(135deg,#f5f3ff 0%,#e9e4ff 100%);min-height:100vh;}
+
+/* LOGIN */
+.login-container{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);z-index:1000;}
+.login-box{background:rgba(255,255,255,0.97);padding:36px 32px;border-radius:32px;width:380px;text-align:center;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);animation:fadeInUp 0.5s ease;}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.login-logo{width:90px;height:90px;border-radius:50%;object-fit:cover;margin-bottom:16px;box-shadow:0 10px 25px -5px rgba(0,0,0,0.2);}
+.login-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.ltab{flex:1;padding:9px;border:2px solid #e2e8f0;border-radius:12px;background:white;cursor:pointer;font-weight:600;font-size:12px;transition:all 0.2s;}
+.ltab.active{background:#8b5cf6;color:white;border-color:#8b5cf6;}
+.login-box input{width:100%;padding:13px 16px;margin:7px 0;border:2px solid #e2e8f0;border-radius:14px;font-size:14px;font-family:'Poppins',sans-serif;transition:all 0.3s;}
+.login-box input:focus{outline:none;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,0.15);}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);border:none;border-radius:14px;color:white;font-weight:600;font-size:14px;cursor:pointer;margin-top:8px;transition:transform 0.2s;}
+.login-btn:hover{transform:translateY(-2px);}
+.login-hint{font-size:11px;color:#94a3b8;margin-top:10px;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#1e1b4b 0%,#2d2a6e 100%);padding:55px 20px 70px;text-align:center;color:white;position:relative;clip-path:polygon(0 0,100% 0,100% 85%,0 100%);}
+.logout-btn{position:absolute;top:22px;right:22px;background:rgba(255,255,255,0.15);border:none;padding:9px 18px;border-radius:40px;color:white;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.3s;}
+.logout-btn:hover{background:#ef4444;}
+.role-badge{position:absolute;top:22px;left:22px;background:rgba(255,255,255,0.15);padding:8px 16px;border-radius:40px;font-size:12px;font-weight:600;}
+
+/* MENU */
+.menu{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:-30px 20px 20px;position:relative;z-index:10;}
+.menu button{border:none;padding:11px 20px;border-radius:40px;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+.menu button:hover{transform:translateY(-3px);box-shadow:0 10px 20px rgba(0,0,0,0.15);}
+.btn-purple{background:#8b5cf6;color:white;} .btn-amber{background:#f59e0b;color:white;}
+.btn-green{background:#10b981;color:white;}  .btn-blue{background:#3b82f6;color:white;}
+.btn-cyan{background:#06b6d4;color:white;}   .btn-red{background:#ef4444;color:white;}
+.btn-violet{background:#7c3aed;color:white;} .btn-gray{background:#64748b;color:white;}
+
+/* CONTAINER */
+.container{background:white;margin:20px;padding:24px;border-radius:28px;box-shadow:0 20px 35px -10px rgba(0,0,0,0.08);animation:fadeSlide 0.4s ease;}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.hidden{display:none!important;}
+.section-title{font-size:18px;font-weight:700;color:#1e293b;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:18px;}
+.card{background:#f8fafc;padding:20px 16px;border-radius:20px;text-align:center;transition:all 0.3s;border:1px solid rgba(139,92,246,0.15);}
+.card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,0.08);}
+.card h3{font-size:12px;color:#64748b;margin-bottom:6px;}
+.card p{font-size:26px;font-weight:800;color:#1e293b;}
+
+/* FILTER BAR */
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;align-items:center;}
+.filter-bar input,.filter-bar select{padding:10px 16px;border-radius:40px;border:2px solid #e2e8f0;background:white;font-size:13px;font-family:'Poppins',sans-serif;}
+.filter-bar input:focus,.filter-bar select:focus{outline:none;border-color:#8b5cf6;}
+.fbtn{padding:10px 20px;border-radius:40px;border:none;background:#8b5cf6;color:white;font-weight:600;font-size:13px;cursor:pointer;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+th,td{padding:11px 12px;text-align:center;border-bottom:1px solid #f1f5f9;font-size:13px;}
+th{background:#f8fafc;font-weight:700;color:#374151;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;}
+tr:hover td{background:#fafafa;}
+
+/* STATUS BUTTONS */
+.sbtn{padding:5px 14px;border-radius:40px;border:2px solid;font-weight:600;margin:0 2px;cursor:pointer;font-size:12px;transition:all 0.2s;}
+.pbtn{border-color:#10b981;color:#10b981;background:white;} .pbtn.active{background:#10b981;color:white;}
+.abtn{border-color:#ef4444;color:#ef4444;background:white;} .abtn.active{background:#ef4444;color:white;}
+.time-in{padding:5px 10px;border:2px solid #e2e8f0;border-radius:20px;font-size:12px;font-family:'Poppins',sans-serif;width:108px;}
+.time-in:focus{outline:none;border-color:#8b5cf6;}
+.locked-row{background:#f8fafc!important;color:#94a3b8;font-style:italic;}
+
+/* BADGES */
+.b-ontime{background:#d1fae5;color:#065f46;padding:3px 11px;border-radius:40px;font-size:11px;font-weight:600;}
+.b-late{background:#fef3c7;color:#92400e;padding:3px 11px;border-radius:40px;font-size:11px;font-weight:600;}
+.b-absent{background:#fee2e2;color:#dc2626;padding:3px 11px;border-radius:40px;font-size:11px;font-weight:600;}
+.b-present{background:#d1fae5;color:#065f46;padding:4px 14px;border-radius:40px;font-size:12px;font-weight:600;}
+.b-none{background:#f1f5f9;color:#94a3b8;padding:3px 11px;border-radius:40px;font-size:11px;}
+.b-teacher{background:#ede9fe;color:#5b21b6;padding:3px 11px;border-radius:40px;font-size:11px;font-weight:600;}
+.b-low{background:#fee2e2;color:#dc2626;padding:3px 11px;border-radius:40px;font-size:11px;font-weight:600;}
+.b-good{background:#d1fae5;color:#065f46;padding:3px 11px;border-radius:40px;font-size:11px;font-weight:600;}
+.ph{background:#d1fae5;color:#065f46;} .pm{background:#fef3c7;color:#92400e;} .pl{background:#fee2e2;color:#dc2626;}
+.pct-badge{font-weight:700;padding:4px 12px;border-radius:40px;display:inline-block;font-size:12px;}
+.low-row{background:#fff5f5!important;}
+
+/* ACTION BUTTONS */
+.act{padding:5px 12px;border:none;border-radius:24px;cursor:pointer;font-weight:500;font-size:12px;margin:0 2px;}
+.act-edit{background:#dbeafe;color:#1d4ed8;} .act-del{background:#fee2e2;color:#dc2626;}
+.act-view{background:#ede9fe;color:#5b21b6;}
+
+/* MODAL */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(3px);}
+.modal.open{display:flex;}
+.modal-box{background:white;padding:28px;border-radius:28px;width:420px;max-width:92%;max-height:90vh;overflow-y:auto;}
+.modal-box h3{font-size:16px;font-weight:700;margin-bottom:16px;}
+.modal-box input,.modal-box select{width:100%;padding:11px 14px;margin:6px 0;border:2px solid #e2e8f0;border-radius:14px;font-size:13px;font-family:'Poppins',sans-serif;}
+.modal-box input:focus,.modal-box select:focus{outline:none;border-color:#8b5cf6;}
+.modal-close{float:right;font-size:22px;cursor:pointer;color:#94a3b8;line-height:1;}
+.modal-save{width:100%;padding:13px;border:none;border-radius:14px;color:white;font-weight:600;font-size:14px;cursor:pointer;margin-top:10px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);}
+
+/* TEACHER INFO BAR */
+.tbar{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-radius:18px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px;}
+.tavatar{width:42px;height:42px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:15px;flex-shrink:0;}
+
+/* SUMMARY BAR */
+.summary-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.sum-card{background:#f8fafc;border-radius:16px;padding:14px;text-align:center;border:1px solid #e2e8f0;}
+.sum-card .num{font-size:22px;font-weight:800;}
+.sum-card .lbl{font-size:11px;color:#64748b;margin-top:2px;}
+
+/* DATE NAV */
+.date-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.date-nav input[type=date]{padding:9px 16px;border-radius:40px;border:2px solid #e2e8f0;font-size:13px;font-family:'Poppins',sans-serif;}
+.cutoff-bar{background:#fef3c7;border-radius:14px;padding:9px 16px;font-size:12px;color:#92400e;margin-bottom:14px;}
+
+/* DATE LOCK NOTICE */
+.lock-notice{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:9px 16px;font-size:12px;color:#15803d;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.locked-notice{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;}
+
+/* WARN BANNERS */
+.warn{border-radius:18px;padding:16px 20px;margin:14px 0;display:flex;align-items:flex-start;gap:12px;}
+.warn.danger{background:#fee2e2;border:1.5px solid #fca5a5;}
+.warn.warning{background:#fef3c7;border:1.5px solid #fcd34d;}
+.warn.caution{background:#fff7ed;border:1.5px solid #fed7aa;}
+.warn.good{background:#d1fae5;border:1.5px solid #6ee7b7;}
+.warn-icon{font-size:24px;flex-shrink:0;}
+.warn-title{font-weight:700;font-size:14px;margin-bottom:3px;}
+.warn-body{font-size:12px;line-height:1.6;}
+
+/* PARENT DASHBOARD */
+.att-ring-wrap{display:flex;justify-content:center;margin:20px 0 10px;}
+.att-ring{position:relative;width:150px;height:150px;}
+.att-ring canvas{position:absolute;top:0;left:0;}
+.att-ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.att-ring-label .rpct{font-size:28px;font-weight:800;}
+.att-ring-label .rsub{font-size:11px;color:#64748b;}
+.pstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin:16px 0;}
+.pstat{background:#f8fafc;padding:16px 10px;border-radius:18px;text-align:center;border:1px solid #e2e8f0;}
+.pstat h3{font-size:11px;color:#64748b;}
+.pstat p{font-size:22px;font-weight:800;color:#8b5cf6;}
+.chart-wrap{position:relative;height:150px;margin-top:8px;}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:14px;margin-bottom:8px;background:#f8fafc;border:1px solid #e2e8f0;}
+.notif-absent{border-left:3px solid #ef4444;}
+.notif-late{border-left:3px solid #f59e0b;}
+.day-row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:14px;margin-bottom:7px;background:#f8fafc;border:1px solid #e2e8f0;}
+
+/* SETTINGS */
+.settings-section{max-width:480px;}
+.settings-card{background:#f8fafc;border-radius:20px;padding:22px;margin-bottom:18px;border:1px solid #e2e8f0;}
+.settings-card h3{font-size:15px;font-weight:700;margin-bottom:14px;color:#1e293b;}
+.settings-card input{width:100%;padding:11px 14px;border:2px solid #e2e8f0;border-radius:14px;font-size:13px;font-family:'Poppins',sans-serif;margin-bottom:10px;}
+.settings-card input:focus{outline:none;border-color:#8b5cf6;}
+
+/* SPINNER */
+.spinner{width:28px;height:28px;border:3px solid #e2e8f0;border-top-color:#8b5cf6;border-radius:50%;animation:spin 0.8s linear infinite;margin:10px auto;display:none;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:13px 22px;border-radius:50px;font-weight:600;font-size:13px;box-shadow:0 8px 20px rgba(0,0,0,0.15);opacity:0;transform:translateX(100%);transition:all 0.4s;z-index:5000;}
+.toast.show{opacity:1;transform:translateX(0);}
+
+@media(max-width:768px){.menu button{padding:8px 14px;font-size:12px;}th,td{padding:8px;font-size:11px;}.cards{grid-template-columns:repeat(2,1fr);}.summary-bar{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-container" id="loginPage">
+  <div class="login-box">
+    <img class="login-logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPldJ1U4x3Taz6RW3P-pRhCsRY0FwcaXiWCokWN3wpGw&s" alt="Logo">
+    <h2 style="margin-bottom:14px;font-size:18px;">🔐 Smart Attendance</h2>
+    <div class="login-tabs">
+      <button class="ltab active" onclick="setRole('admin',this)">👨‍💼 Admin</button>
+      <button class="ltab" onclick="setRole('teacher',this)">👨‍🏫 Teacher</button>
+      <button class="ltab" onclick="setRole('parent',this)">👪 Parent</button>
+    </div>
+    <input type="text"     style="display:none;" aria-hidden="true">
+    <input type="password" style="display:none;" aria-hidden="true">
+    <input type="text" id="loginUser" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <input type="password" id="loginPass" placeholder="Password" autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="login-btn" onclick="doLogin()">Login</button>
+    <p id="loginError" style="color:#ef4444;display:none;margin-top:10px;font-size:13px;">❌ Invalid credentials</p>
+    <div class="spinner" id="loginSpinner"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <span class="role-badge" id="roleBadge" style="display:none;"></span>
+  <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  <h1 style="font-size:26px;font-weight:800;">🎓 Student-Hub</h1>
+  <p style="opacity:0.9;font-size:14px;">SREE SIDDARAMESHWARA POLYTECHNIC, TIPTUR</p>
+  <p style="opacity:0.75;font-size:12px;margin-top:4px;">Smart Attendance Management System</p>
+</div>
+
+<!-- MENU -->
+<div class="menu" id="mainMenu">
+  <button class="btn-purple admin-only"  onclick="showSection('dashboard')">📊 Dashboard</button>
+  <button class="btn-green admin-only"   onclick="openStudentModal()">➕ Add Student</button>
+  <button class="btn-blue admin-only"    onclick="showSection('students')">👥 Students</button>
+  <button class="btn-violet admin-only"  onclick="showSection('teachers')">👨‍🏫 Teachers</button>
+  <button class="btn-red admin-only"     onclick="showSection('report')">📈 Reports</button>
+  <button class="btn-gray admin-only"    onclick="showSection('settings')">⚙️ Settings</button>
+  <button class="btn-amber teacher-only" onclick="showSection('tAttendance')">📝 Attendance</button>
+  <button class="btn-red teacher-only"   onclick="showSection('tReport')">📈 Report</button>
+  <button class="btn-blue parent-only"   onclick="showSection('pDashboard')">🏠 Dashboard</button>
+  <button class="btn-cyan parent-only"   onclick="showSection('pDateView')">📅 Date View</button>
+  <button class="btn-red parent-only"    onclick="showSection('pMonthly')">📊 Monthly</button>
+  <button class="btn-amber parent-only"  onclick="showSection('pNotif')">🔔 Alerts</button>
+</div>
+
+<!-- ════════════════ ADMIN SECTIONS ════════════════ -->
+
+<!-- DASHBOARD -->
+<div class="container hidden" id="dashboard">
+  <div class="section-title">📊 Smart Dashboard</div>
+  <div class="cards">
+    <div class="card"><h3>Total Students</h3><p id="ds_students">—</p></div>
+    <div class="card"><h3>Total Teachers</h3><p id="ds_teachers" style="color:#7c3aed;">—</p></div>
+    <div class="card"><h3>Today Present</h3><p id="ds_present" style="color:#10b981;">—</p></div>
+    <div class="card"><h3>Today Absent</h3><p id="ds_absent" style="color:#ef4444;">—</p></div>
+    <div class="card"><h3>Today Late</h3><p id="ds_late" style="color:#f59e0b;">—</p></div>
+    <div class="card"><h3>Avg Attendance</h3><p id="ds_avg">—</p></div>
+    <div class="card"><h3>Low Alert &lt;75%</h3><p id="ds_low" style="color:#ef4444;">—</p></div>
+    <div class="card"><h3>Attendance Days</h3><p id="ds_classes">—</p></div>
+  </div>
+  <div style="margin-top:18px;padding:14px;background:#fef3c7;border-radius:18px;font-size:13px;">
+    ⚠️ <strong>Low Attendance Alert:</strong> Students below 75% are highlighted in Reports → Low Attendance List.
+  </div>
+</div>
+
+<!-- ATTENDANCE (Admin) -->
+<div class="container hidden" id="attendance">
+  <div class="section-title">📅 Date-wise Attendance</div>
+  <div class="date-nav">
+    <input type="date" id="attDate" onchange="loadAdminAtt()">
+    <button class="fbtn" onclick="loadAdminAtt()">Load</button>
+    <button class="fbtn" style="background:#10b981;" onclick="saveAdminAtt()">💾 Save</button>
+  </div>
+  <div class="cutoff-bar">⏰ <strong>On-time cutoff: 10:30 AM</strong> — Enter arrival time. After 10:30 AM = Late.</div>
+  <div class="filter-bar">
+    <select id="attDept" onchange="renderAdminAtt()">
+      <option>All Departments</option>
+      <option>Computer Science and Engineering</option>
+      <option>Electronics and Communication Engineering</option>
+      <option>Electrical and Electronics Engineering</option>
+      <option>Civil Engineering</option>
+      <option>Mechanical Engineering</option>
+      <option>Apparel Design and Fabrication Technology</option>
+    </select>
+    <select id="attYear" onchange="renderAdminAtt()">
+      <option>All Years</option><option>1st Year</option><option>2nd Year</option><option>3rd Year</option>
+    </select>
+  </div>
+  <div style="overflow-x:auto;">
+    <table><thead><tr><th>Roll</th><th>Name</th><th>Dept</th><th>Status</th><th>Time In</th><th>Punctuality</th></tr></thead>
+    <tbody id="attBody"></tbody></table>
+  </div>
+  <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+    <button class="fbtn" style="background:#10b981;" onclick="markAllAdmin('Present')">✅ All Present</button>
+    <button class="fbtn" style="background:#ef4444;" onclick="markAllAdmin('Absent')">❌ All Absent</button>
+  </div>
+</div>
+
+<!-- STUDENTS -->
+<div class="container hidden" id="students">
+  <div class="section-title">👥 Student Directory</div>
+  <div class="filter-bar">
+    <input type="text" id="stuSearch" placeholder="🔍 Search name or ID…" oninput="filterStudents()" style="flex:1;min-width:200px;">
+    <select id="stuDeptF" onchange="filterStudents()">
+      <option>All Departments</option>
+      <option>Computer Science and Engineering</option>
+      <option>Electronics and Communication Engineering</option>
+      <option>Electrical and Electronics Engineering</option>
+      <option>Civil Engineering</option>
+      <option>Mechanical Engineering</option>
+      <option>Apparel Design and Fabrication Technology</option>
+    </select>
+    <select id="stuYearF" onchange="filterStudents()">
+      <option>All Years</option><option>1st Year</option><option>2nd Year</option><option>3rd Year</option>
+    </select>
+  </div>
+  <div style="overflow-x:auto;">
+    <table><thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Year</th><th>Phone</th><th>Actions</th></tr></thead>
+    <tbody id="stuBody"></tbody></table>
+  </div>
+</div>
+
+<!-- TEACHERS -->
+<div class="container hidden" id="teachers">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+    <div class="section-title" style="margin-bottom:0;">👨‍🏫 Teacher Management</div>
+    <button class="fbtn" style="background:#7c3aed;" onclick="openTeacherModal()">➕ Add Teacher</button>
+  </div>
+  <div style="overflow-x:auto;">
+    <table><thead><tr><th>Name</th><th>Email</th><th>Dept</th><th>Subject</th><th>Year</th><th>Actions</th></tr></thead>
+    <tbody id="tchBody"></tbody></table>
+  </div>
+</div>
+
+<!-- CLASSES -->
+<div class="container hidden" id="classes">
+  <div class="section-title">🏫 Class Management</div>
+  <div class="filter-bar">
+    <select id="clDept" onchange="loadClYears()"><option>Select Dept</option></select>
+    <select id="clYear" onchange="loadClSems()"><option>Select Year</option></select>
+    <select id="clSem"  onchange="loadClSubs()"><option>Select Sem</option></select>
+    <select id="clSub"><option>Select Subject</option></select>
+    <button class="fbtn" onclick="addClassItem()">➕ Add</button>
+  </div>
+  <table><thead><tr><th>Dept</th><th>Year</th><th>Semester</th><th>Subject</th><th>Action</th></tr></thead>
+  <tbody id="clBody"></tbody></table>
+</div>
+
+<!-- REPORTS -->
+<div class="container hidden" id="report">
+  <div class="section-title">📈 Attendance Reports</div>
+  <!-- Sub tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+    <button class="fbtn" onclick="switchReport('monthly')" id="rt-monthly">📅 Monthly Report</button>
+    <button class="fbtn" style="background:#64748b;" onclick="switchReport('student')" id="rt-student">👤 Student-wise</button>
+    <button class="fbtn" style="background:#ef4444;" onclick="switchReport('low')" id="rt-low">⚠️ Low Attendance</button>
+  </div>
+
+  <!-- Monthly Report -->
+  <div id="rep-monthly">
+    <div class="filter-bar">
+      <select id="repDept" onchange="genMonthly()"><option>All Departments</option></select>
+      <select id="repYear" onchange="genMonthly()"><option>All Years</option></select>
+      <input type="month" id="repMonth" onchange="genMonthly()" style="padding:10px 14px;border-radius:40px;border:2px solid #e2e8f0;font-family:'Poppins',sans-serif;">
+      <button class="fbtn" style="background:#10b981;" onclick="exportCSV()">📥 CSV</button>
+      <button class="fbtn" style="background:#ef4444;" onclick="exportPDF()">📄 PDF</button>
+    </div>
+    <div id="repContainer" style="overflow-x:auto;"></div>
+  </div>
+
+  <!-- Student-wise Report -->
+  <div id="rep-student" class="hidden">
+    <div class="filter-bar">
+      <input type="text" id="repStuSearch" placeholder="🔍 Search student…" oninput="searchStudentReport()" style="flex:1;min-width:200px;">
+    </div>
+    <div id="repStuList" style="overflow-x:auto;"></div>
+    <!-- Individual student detail -->
+    <div id="repStuDetail" class="hidden" style="margin-top:20px;">
+      <button onclick="document.getElementById('repStuDetail').classList.add('hidden')" style="background:#e2e8f0;border:none;padding:8px 16px;border-radius:40px;cursor:pointer;margin-bottom:14px;font-size:13px;">← Back to list</button>
+      <div id="repStuDetailContent"></div>
+    </div>
+  </div>
+
+  <!-- Low Attendance List -->
+  <div id="rep-low" class="hidden">
+    <div style="margin-bottom:14px;padding:13px 16px;background:#fee2e2;border-radius:16px;font-size:13px;color:#dc2626;">
+      ⚠️ Students with attendance below 75% — needs immediate attention.
+    </div>
+    <div id="repLowList" style="overflow-x:auto;"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="container hidden" id="settings">
+  <div class="section-title">⚙️ Settings</div>
+  <div class="settings-section">
+    <div class="settings-card">
+      <h3>🔑 Change Admin Password</h3>
+      <input type="password" id="oldPass" placeholder="Current password">
+      <input type="password" id="newPass" placeholder="New password (min 4 chars)">
+      <input type="password" id="confPass" placeholder="Confirm new password">
+      <button class="fbtn" style="width:100%;padding:12px;" onclick="changePassword()">Update Password</button>
+      <p id="passMsg" style="margin-top:10px;font-size:13px;display:none;"></p>
+    </div>
+    <div class="settings-card">
+      <h3>ℹ️ System Info</h3>
+      <p style="font-size:13px;color:#64748b;line-height:1.8;">
+        College: Sree Siddarameshwara Polytechnic, Tiptur<br>
+        System: Smart Attendance v2.0<br>
+        Late cutoff: 10:30 AM<br>
+        Min attendance: 75%
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TEACHER SECTIONS ════════════════ -->
+
+<!-- TEACHER ATTENDANCE -->
+<div class="container hidden" id="tAttendance">
+  <div class="section-title">📝 My Class Attendance</div>
+  <div class="tbar" id="tInfoBar"></div>
+
+  <!-- Summary bar -->
+  <div class="summary-bar" id="tSummary">
+    <div class="sum-card"><div class="num" id="ts_total" style="color:#3b82f6;">—</div><div class="lbl">Total</div></div>
+    <div class="sum-card"><div class="num" id="ts_present" style="color:#10b981;">—</div><div class="lbl">Present</div></div>
+    <div class="sum-card"><div class="num" id="ts_absent" style="color:#ef4444;">—</div><div class="lbl">Absent</div></div>
+    <div class="sum-card"><div class="num" id="ts_pct" style="color:#8b5cf6;">—</div><div class="lbl">Attendance %</div></div>
+  </div>
+
+  <div class="date-nav">
+    <input type="date" id="tAttDate" onchange="loadTeacherAtt()">
+    <button class="fbtn" onclick="loadTeacherAtt()">Load</button>
+    <button class="fbtn" style="background:#10b981;" onclick="saveTeacherAtt()">💾 Save</button>
+  </div>
+  <div id="tDateNotice" class="lock-notice"></div>
+  <div class="cutoff-bar">⏰ <strong>On-time cutoff: 10:30 AM</strong></div>
+
+  <!-- Search -->
+  <div class="filter-bar">
+    <input type="text" id="tStuSearch" placeholder="🔍 Search name or roll…" oninput="renderTeacherAtt()" style="flex:1;min-width:180px;">
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table><thead><tr><th>Roll</th><th>Name</th><th>Status</th><th>Time In</th><th>Punctuality</th></tr></thead>
+    <tbody id="tAttBody"></tbody></table>
+  </div>
+  <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+    <button class="fbtn" style="background:#10b981;" onclick="markAllTeacher('Present')">✅ All Present</button>
+    <button class="fbtn" style="background:#ef4444;" onclick="markAllTeacher('Absent')">❌ All Absent</button>
+  </div>
+</div>
+
+<!-- TEACHER REPORT -->
+<div class="container hidden" id="tReport">
+  <div class="section-title">📈 My Class Report</div>
+  <div class="tbar" id="tRepInfoBar"></div>
+  <div class="filter-bar">
+    <input type="month" id="tRepMonth" style="padding:10px 14px;border-radius:40px;border:2px solid #e2e8f0;font-family:'Poppins',sans-serif;">
+    <button class="fbtn" onclick="loadTeacherReport()">Generate</button>
+    <button class="fbtn" style="background:#10b981;" onclick="exportTeacherCSV()">📥 CSV</button>
+    <button class="fbtn" style="background:#ef4444;" onclick="exportTeacherPDF()">📄 PDF</button>
+  </div>
+  <div id="tRepContainer" style="overflow-x:auto;margin-top:16px;"></div>
+</div>
+
+<!-- ════════════════ PARENT SECTIONS ════════════════ -->
+
+<!-- PARENT DASHBOARD -->
+<div class="container hidden" id="pDashboard">
+  <div class="section-title">🏠 My Child's Dashboard</div>
+  <p id="pName" style="font-size:20px;font-weight:800;text-align:center;"></p>
+  <p id="pDeptYear" style="text-align:center;color:#64748b;font-size:13px;margin-bottom:4px;"></p>
+  <div id="pWarnBanner"></div>
+  <div class="att-ring-wrap">
+    <div class="att-ring">
+      <canvas id="donutChart" width="150" height="150"></canvas>
+      <div class="att-ring-label"><span class="rpct" id="ringPct">0%</span><span class="rsub">Attendance</span></div>
+    </div>
+  </div>
+  <div class="pstats">
+    <div class="pstat"><h3>Total Classes</h3><p id="p_total">0</p></div>
+    <div class="pstat"><h3>Present</h3><p id="p_present" style="color:#10b981;">0</p></div>
+    <div class="pstat"><h3>Absent</h3><p id="p_absent" style="color:#ef4444;">0</p></div>
+    <div class="pstat"><h3>Late Days</h3><p id="p_late" style="color:#f59e0b;">0</p></div>
+  </div>
+  <h3 style="font-size:14px;font-weight:600;margin-bottom:10px;">📊 Last 7 Days</h3>
+  <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+  <h3 style="font-size:14px;font-weight:600;margin:18px 0 10px;">📆 Last 5 Days</h3>
+  <div id="pLast5"></div>
+</div>
+
+<!-- PARENT DATE VIEW -->
+<div class="container hidden" id="pDateView">
+  <div class="section-title">📅 Date-wise Attendance (View Only)</div>
+  <div class="date-nav">
+    <input type="date" id="pViewDate">
+    <button class="fbtn" onclick="loadParentDateView()">View</button>
+  </div>
+  <div id="pDateResult" style="margin-top:16px;"></div>
+</div>
+
+<!-- PARENT MONTHLY -->
+<div class="container hidden" id="pMonthly">
+  <div class="section-title">📊 Monthly Report</div>
+  <div class="filter-bar">
+    <input type="month" id="pMonthSel" style="padding:10px 14px;border-radius:40px;border:2px solid #e2e8f0;font-family:'Poppins',sans-serif;">
+    <button class="fbtn" onclick="loadParentMonthly()">View</button>
+  </div>
+  <div id="pMonthlyContent" style="margin-top:16px;overflow-x:auto;"></div>
+</div>
+
+<!-- PARENT NOTIFICATIONS -->
+<div class="container hidden" id="pNotif">
+  <div class="section-title">🔔 Alerts & Notifications</div>
+  <div id="pNotifList"></div>
+</div>
+
+<!-- ════════════════ MODALS ════════════════ -->
+
+<!-- Student Modal -->
+<div class="modal" id="stuModal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeStuModal()">×</span>
+    <h3 id="stuModalTitle">Add Student</h3>
+    <input id="mStuName"  placeholder="Full Name">
+    <input id="mStuId"    placeholder="Student ID (e.g. S001)">
+    <input id="mStuEmail" placeholder="Email">
+    <input id="mStuPhone" placeholder="Phone (used for parent login)">
+    <select id="mStuDept">
+      <option>Computer Science and Engineering</option>
+      <option>Electronics and Communication Engineering</option>
+      <option>Electrical and Electronics Engineering</option>
+      <option>Civil Engineering</option>
+      <option>Mechanical Engineering</option>
+      <option>Apparel Design and Fabrication Technology</option>
+    </select>
+    <select id="mStuYear">
+      <option>1st Year</option><option>2nd Year</option><option>3rd Year</option>
+    </select>
+    <button class="modal-save" onclick="saveStu()">💾 Save Student</button>
+  </div>
+</div>
+
+<!-- Teacher Modal -->
+<div class="modal" id="tchModal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeTchModal()">×</span>
+    <h3 id="tchModalTitle">Add Teacher</h3>
+    <input id="mTchName"  placeholder="Full Name">
+    <input id="mTchEmail" placeholder="Email (login username)">
+    <input id="mTchPass"  placeholder="Password" type="password">
+    <select id="mTchDept">
+      <option>Computer Science and Engineering</option>
+      <option>Electronics and Communication Engineering</option>
+      <option>Electrical and Electronics Engineering</option>
+      <option>Civil Engineering</option>
+      <option>Mechanical Engineering</option>
+      <option>Apparel Design and Fabrication Technology</option>
+    </select>
+    <input id="mTchSub" placeholder="Subject (e.g. Python Programming)">
+    <select id="mTchYear">
+      <option>1st Year</option><option>2nd Year</option><option>3rd Year</option>
+    </select>
+    <button class="modal-save" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);" onclick="saveTch()">💾 Save Teacher</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API = 'http://localhost:5000/api';
+let allStudents=[], adminAttMap={}, teacherAttMap={};
+let editStuId=null, editTchId=null;
+let currentRole='', currentTeacher=null, currentParentId=null;
+let donutInst=null, barInst=null;
+let cachedRepStudents=[];
+
+const classData={
+  "Computer Science and Engineering":{"1st Year":{"1st Sem":["Math","Python","English"],"2nd Sem":["Java","Physics"]},"2nd Year":{"3rd Sem":["DBMS","OS"],"4th Sem":["Networks"]},"3rd Year":{"5th Sem":["AI","ML"],"6th Sem":["Project"]}},
+  "Electronics and Communication Engineering":{"1st Year":{"1st Sem":["Electronics","Math"]},"2nd Year":{"3rd Sem":["Signals","Circuits"]}}
+};
+
+// ── Helpers ────────────────────────────────────────────────
+function today(){ return new Date().toISOString().split('T')[0]; }
+function nowTime(){ const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':00'; }
+function isToday(d){ return d===today(); }
+
+async function api(path, opts={}){
+  try{
+    const r=await fetch(API+path,{headers:{'Content-Type':'application/json'},...opts});
+    return r.json();
+  }catch(e){ return {error:'Connection failed. Is Flask running?'}; }
+}
+
+function toast(msg, color='#10b981'){
+  const t=document.getElementById('toast');
+  t.innerText=msg; t.style.background=color; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function pBadge(status,p){
+  if(status==='Absent') return '<span class="b-absent">Absent</span>';
+  if(p==='On-time') return '<span class="b-ontime">✅ On-time</span>';
+  if(p==='Late')    return '<span class="b-late">⏰ Late</span>';
+  return '<span class="b-none">—</span>';
+}
+
+function pctClass(p){ return p>=75?'ph':p>=50?'pm':'pl'; }
+
+// ── Login ──────────────────────────────────────────────────
+function setRole(role,btn){
+  document.querySelectorAll('.ltab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const ph={admin:['Username','Password'],teacher:['Email address','Password'],parent:['Student ID','Phone number']};
+  document.getElementById('loginUser').placeholder=ph[role][0];
+  document.getElementById('loginPass').placeholder=ph[role][1];
+}
+
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value.trim();
+  document.getElementById('loginSpinner').style.display='block';
+  document.getElementById('loginError').style.display='none';
+  const d=await api('/login',{method:'POST',body:JSON.stringify({username:u,password:p})});
+  document.getElementById('loginSpinner').style.display='none';
+  if(!d.success){ document.getElementById('loginError').style.display='block'; return; }
+  document.getElementById('loginPage').style.display='none';
+
+  if(d.role==='admin'){
+    currentRole='admin';
+    document.getElementById('roleBadge').innerText='👨‍💼 Admin'; document.getElementById('roleBadge').style.display='block';
+    document.querySelectorAll('.admin-only').forEach(b=>b.style.display='inline-block');
+    document.querySelectorAll('.teacher-only,.parent-only').forEach(b=>b.style.display='none');
+    toast('Welcome Admin! 👋');
+    showSection('dashboard');
+  } else if(d.role==='teacher'){
+    currentRole='teacher'; currentTeacher=d.teacher;
+    document.getElementById('roleBadge').innerText='👨‍🏫 '+d.teacher.name; document.getElementById('roleBadge').style.display='block';
+    document.querySelectorAll('.teacher-only').forEach(b=>b.style.display='inline-block');
+    document.querySelectorAll('.admin-only,.parent-only').forEach(b=>b.style.display='none');
+    toast('Welcome '+d.teacher.name+'! 👋');
+    showSection('tAttendance');
+  } else if(d.role==='parent'){
+    currentRole='parent'; currentParentId=d.student.id;
+    document.getElementById('roleBadge').innerText='👪 '+d.student.name; document.getElementById('roleBadge').style.display='block';
+    document.querySelectorAll('.parent-only').forEach(b=>b.style.display='inline-block');
+    document.querySelectorAll('.admin-only,.teacher-only').forEach(b=>b.style.display='none');
+    toast('Welcome '+d.student.name+'! 👋');
+    showSection('pDashboard');
+    loadParentDashboard(d.student.id);
+  }
+}
+function logout(){ location.reload(); }
+
+// ── Navigation ─────────────────────────────────────────────
+function showSection(id){
+  document.querySelectorAll('.container').forEach(c=>c.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if(id==='dashboard') loadDashboard();
+  if(id==='attendance'){ document.getElementById('attDate').valueAsDate=new Date(); loadAdminAtt(); }
+  if(id==='students')  loadStudents();
+  if(id==='teachers')  loadTeachers();
+  if(id==='classes')   loadClasses();
+  if(id==='report')    { switchReport('monthly'); loadRepStudents(); }
+  if(id==='tAttendance'){ document.getElementById('tAttDate').valueAsDate=new Date(); loadTeacherAtt(); }
+  if(id==='tReport')   setTeacherRepInfoBar();
+  if(id==='pDashboard') if(currentParentId) loadParentDashboard(currentParentId);
+  if(id==='pDateView')  document.getElementById('pViewDate').valueAsDate=new Date();
+  if(id==='pNotif')     loadParentNotifs();
+}
+
+// ── Dashboard ──────────────────────────────────────────────
+async function loadDashboard(){
+  const d=await api('/dashboard');
+  if(d.error){ toast(d.error,'#ef4444'); return; }
+  document.getElementById('ds_students').innerText=d.total_students;
+  document.getElementById('ds_teachers').innerText=d.total_teachers;
+  document.getElementById('ds_present').innerText=d.today_present;
+  document.getElementById('ds_absent').innerText=d.today_absent;
+  document.getElementById('ds_late').innerText=d.today_late;
+  document.getElementById('ds_avg').innerText=d.avg_rate+'%';
+  document.getElementById('ds_low').innerText=d.low_count;
+  document.getElementById('ds_classes').innerText=d.total_classes;
+}
+
+// ── Students ───────────────────────────────────────────────
+async function loadStudents(){
+  allStudents=await api('/students');
+  renderStudents(allStudents);
+}
+function renderStudents(list){
+  document.getElementById('stuBody').innerHTML=list.map(s=>`
+    <tr><td>${s.id}</td><td>${s.name}</td><td style="font-size:11px;">${s.dept}</td><td>${s.year}</td><td>${s.phone||'—'}</td>
+    <td>
+      <button class="act act-edit" onclick="openStudentModal('${s.id}')">✏️ Edit</button>
+      <button class="act act-del"  onclick="delStudent('${s.id}')">🗑️ Del</button>
+      <button class="act act-view" onclick="viewStudentReport('${s.id}')">📊 Report</button>
+    </td></tr>`).join('');
+}
+function filterStudents(){
+  const q=(document.getElementById('stuSearch').value||'').toLowerCase();
+  const df=document.getElementById('stuDeptF').value;
+  const yf=document.getElementById('stuYearF').value;
+  const f=allStudents.filter(s=>
+    (df==='All Departments'||s.dept===df)&&
+    (yf==='All Years'||s.year===yf)&&
+    (s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q))
+  );
+  renderStudents(f);
+}
+function openStudentModal(id=null){
+  editStuId=id;
+  if(id){
+    const s=allStudents.find(x=>x.id===id);
+    document.getElementById('mStuName').value=s.name; document.getElementById('mStuId').value=s.id;
+    document.getElementById('mStuEmail').value=s.email||''; document.getElementById('mStuPhone').value=s.phone||'';
+    document.getElementById('mStuDept').value=s.dept; document.getElementById('mStuYear').value=s.year;
+    document.getElementById('stuModalTitle').innerText='Edit Student';
+    document.getElementById('mStuId').disabled=true;
+  } else {
+    ['mStuName','mStuId','mStuEmail','mStuPhone'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('stuModalTitle').innerText='Add Student';
+    document.getElementById('mStuId').disabled=false;
+  }
+  document.getElementById('stuModal').classList.add('open');
+}
+function closeStuModal(){ document.getElementById('stuModal').classList.remove('open'); document.getElementById('mStuId').disabled=false; }
+async function saveStu(){
+  const s={id:document.getElementById('mStuId').value.trim(),name:document.getElementById('mStuName').value.trim(),
+    email:document.getElementById('mStuEmail').value,phone:document.getElementById('mStuPhone').value,
+    dept:document.getElementById('mStuDept').value,year:document.getElementById('mStuYear').value};
+  if(!s.name||!s.id){ alert('Name and ID required'); return; }
+  const r=editStuId ? await api('/students/'+editStuId,{method:'PUT',body:JSON.stringify(s)})
+                    : await api('/students',{method:'POST',body:JSON.stringify(s)});
+  if(r.error){ alert(r.error); return; }
+  closeStuModal(); loadStudents(); toast('Student saved! ✅');
+}
+async function delStudent(id){
+  if(!confirm('Delete student '+id+'?')) return;
+  await api('/students/'+id,{method:'DELETE'}); loadStudents(); toast('Student deleted');
+}
+async function viewStudentReport(id){
+  const d=await api('/students/'+id+'/report');
+  if(d.error){ alert(d.error); return; }
+  switchReport('student');
+  showSection('report');
+  showStudentDetail(d);
+}
+
+// ── Teachers ───────────────────────────────────────────────
+async function loadTeachers(){
+  const teachers=await api('/teachers');
+  document.getElementById('tchBody').innerHTML=teachers.map(t=>`
+    <tr><td>${t.name}</td><td>${t.email}</td><td style="font-size:11px;">${t.dept}</td>
+    <td><span class="b-teacher">${t.subject}</span></td><td>${t.year}</td>
+    <td><button class="act act-edit" onclick="openTeacherModal(${t.id})">✏️ Edit</button>
+        <button class="act act-del"  onclick="delTeacher(${t.id})">🗑️ Del</button></td></tr>`).join('');
+}
+function openTeacherModal(id=null){
+  editTchId=id;
+  document.getElementById('tchModalTitle').innerText=id?'Edit Teacher':'Add Teacher';
+  if(!id) ['mTchName','mTchEmail','mTchPass','mTchSub'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('tchModal').classList.add('open');
+}
+function closeTchModal(){ document.getElementById('tchModal').classList.remove('open'); }
+async function saveTch(){
+  const t={name:document.getElementById('mTchName').value.trim(),email:document.getElementById('mTchEmail').value.trim(),
+    password:document.getElementById('mTchPass').value,dept:document.getElementById('mTchDept').value,
+    subject:document.getElementById('mTchSub').value.trim(),year:document.getElementById('mTchYear').value};
+  if(!t.name||!t.email){ alert('Name and email required'); return; }
+  const r=editTchId ? await api('/teachers/'+editTchId,{method:'PUT',body:JSON.stringify(t)})
+                    : await api('/teachers',{method:'POST',body:JSON.stringify(t)});
+  if(r.error){ alert(r.error); return; }
+  closeTchModal(); loadTeachers(); toast('Teacher saved! ✅');
+}
+async function delTeacher(id){
+  if(!confirm('Delete this teacher?')) return;
+  await api('/teachers/'+id,{method:'DELETE'}); loadTeachers(); toast('Teacher deleted');
+}
+
+// ── Admin Attendance ───────────────────────────────────────
+async function loadAdminAtt(){
+  const d=document.getElementById('attDate').value; if(!d) return;
+  if(!allStudents.length) allStudents=await api('/students');
+  adminAttMap=await api('/attendance/'+d);
+  renderAdminAtt();
+}
+function renderAdminAtt(){
+  const df=document.getElementById('attDept').value, yf=document.getElementById('attYear').value;
+  const f=allStudents.filter(s=>(df==='All Departments'||s.dept===df)&&(yf==='All Years'||s.year===yf));
+  document.getElementById('attBody').innerHTML=f.map(s=>{
+    const r=adminAttMap[s.id]||{status:'Present',time_in:null,punctuality:null};
+    return `<tr><td>${s.id}</td><td>${s.name}</td><td style="font-size:11px;">${s.dept}</td>
+      <td><button class="sbtn pbtn ${r.status==='Present'?'active':''}" onclick="setAdminAtt('${s.id}','Present')">P</button>
+          <button class="sbtn abtn ${r.status==='Absent'?'active':''}"  onclick="setAdminAtt('${s.id}','Absent')">A</button></td>
+      <td>${r.status==='Absent'?'<span style="color:#94a3b8;">—</span>':`<input type="time" class="time-in" value="${r.time_in?r.time_in.slice(0,5):''}" onchange="setAdminTime('${s.id}',this.value)">`}</td>
+      <td>${pBadge(r.status,r.punctuality)}</td></tr>`;
+  }).join('');
+}
+function setAdminAtt(id,status){
+  if(!adminAttMap[id]) adminAttMap[id]={};
+  adminAttMap[id].status=status;
+  if(status==='Present'&&!adminAttMap[id].time_in) adminAttMap[id].time_in=nowTime();
+  if(status==='Absent'){ adminAttMap[id].time_in=null; adminAttMap[id].punctuality=null; }
+  renderAdminAtt();
+}
+function setAdminTime(id,val){
+  if(!adminAttMap[id]) adminAttMap[id]={};
+  if(val){ adminAttMap[id].time_in=val+':00'; const[h,m]=val.split(':').map(Number); adminAttMap[id].punctuality=(h>10||(h===10&&m>30))?'Late':'On-time'; }
+  else{ adminAttMap[id].time_in=null; adminAttMap[id].punctuality=null; }
+  renderAdminAtt();
+}
+function markAllAdmin(status){
+  allStudents.forEach(s=>{ if(!adminAttMap[s.id]) adminAttMap[s.id]={};
+    adminAttMap[s.id].status=status;
+    if(status==='Present') adminAttMap[s.id].time_in=adminAttMap[s.id].time_in||nowTime();
+    else{ adminAttMap[s.id].time_in=null; adminAttMap[s.id].punctuality=null; }
+  });
+  renderAdminAtt();
+}
+async function saveAdminAtt(){
+  const d=document.getElementById('attDate').value;
+  const r=await api('/attendance',{method:'POST',body:JSON.stringify({date:d,records:adminAttMap})});
+  if(r.error){ toast(r.error,'#ef4444'); return; }
+  adminAttMap=await api('/attendance/'+d); renderAdminAtt();
+  toast(r.message||'Saved! ✅'); loadDashboard();
+}
+
+// ── Classes ────────────────────────────────────────────────
+async function loadClasses(){
+  const cl=await api('/classes');
+  document.getElementById('clBody').innerHTML=cl.map(c=>`
+    <tr><td style="font-size:11px;">${c.dept}</td><td>${c.year}</td><td>${c.semester}</td><td>${c.subject}</td>
+    <td><button class="act act-del" onclick="delClass(${c.id})">🗑️ Del</button></td></tr>`).join('');
+}
+function loadClYears(){ const d=document.getElementById('clDept').value; const y=document.getElementById('clYear'); y.innerHTML='<option>Select Year</option>'; if(classData[d]) Object.keys(classData[d]).forEach(v=>y.innerHTML+=`<option>${v}</option>`); }
+function loadClSems(){ const d=document.getElementById('clDept').value,y=document.getElementById('clYear').value; const s=document.getElementById('clSem'); s.innerHTML='<option>Select Sem</option>'; if(classData[d]?.[y]) Object.keys(classData[d][y]).forEach(v=>s.innerHTML+=`<option>${v}</option>`); }
+function loadClSubs(){ const d=document.getElementById('clDept').value,y=document.getElementById('clYear').value,s=document.getElementById('clSem').value; const sub=document.getElementById('clSub'); sub.innerHTML='<option>Select Subject</option>'; classData[d]?.[y]?.[s]?.forEach(v=>sub.innerHTML+=`<option>${v}</option>`); }
+async function addClassItem(){ const d=document.getElementById('clDept').value,y=document.getElementById('clYear').value,s=document.getElementById('clSem').value,sub=document.getElementById('clSub').value; if(d==='Select Dept'||y==='Select Year') return alert('Select all fields'); const r=await api('/classes',{method:'POST',body:JSON.stringify({dept:d,year:y,semester:s,subject:sub})}); if(r.error) return alert(r.error); loadClasses(); toast('Class added! ✅'); }
+async function delClass(id){ await api('/classes/'+id,{method:'DELETE'}); loadClasses(); }
+
+// ── Reports ────────────────────────────────────────────────
+function switchReport(tab){
+  ['monthly','student','low'].forEach(t=>{ document.getElementById('rep-'+t).classList.add('hidden'); document.getElementById('rt-'+t).style.background='#64748b'; });
+  document.getElementById('rep-'+tab).classList.remove('hidden');
+  document.getElementById('rt-'+tab).style.background='#8b5cf6';
+  if(tab==='monthly') genMonthly();
+  if(tab==='student') loadRepStudents();
+  if(tab==='low')     loadLowList();
+}
+
+async function loadRepStudents(){
+  if(!allStudents.length) allStudents=await api('/students');
+  cachedRepStudents=allStudents;
+  renderRepStudentList(allStudents);
+}
+function renderRepStudentList(list){
+  document.getElementById('repStuList').innerHTML=`
+    <table><thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Year</th><th>Action</th></tr></thead>
+    <tbody>${list.map(s=>`<tr><td>${s.id}</td><td>${s.name}</td><td style="font-size:11px;">${s.dept}</td><td>${s.year}</td>
+      <td><button class="act act-view" onclick="fetchStudentDetail('${s.id}')">📊 View Report</button></td></tr>`).join('')}
+    </tbody></table>`;
+}
+function searchStudentReport(){
+  const q=(document.getElementById('repStuSearch').value||'').toLowerCase();
+  renderRepStudentList(cachedRepStudents.filter(s=>s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q)));
+}
+async function fetchStudentDetail(id){
+  const d=await api('/students/'+id+'/report');
+  if(d.error){ toast(d.error,'#ef4444'); return; }
+  showStudentDetail(d);
+}
+function showStudentDetail(d){
+  document.getElementById('repStuDetail').classList.remove('hidden');
+  const pct=d.percent; const cls=pctClass(pct);
+  document.getElementById('repStuDetailContent').innerHTML=`
+    <div style="background:#f8fafc;border-radius:20px;padding:20px;margin-bottom:16px;">
+      <h3 style="font-size:16px;font-weight:700;">${d.student.name} <span class="pct-badge ${cls}">${pct}%</span></h3>
+      <p style="font-size:12px;color:#64748b;margin-top:4px;">${d.student.dept} | ${d.student.year} | ID: ${d.student.id}</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;">
+        <div class="sum-card"><div class="num">${d.total}</div><div class="lbl">Total</div></div>
+        <div class="sum-card"><div class="num" style="color:#10b981;">${d.present}</div><div class="lbl">Present</div></div>
+        <div class="sum-card"><div class="num" style="color:#ef4444;">${d.absent}</div><div class="lbl">Absent</div></div>
+        <div class="sum-card"><div class="num" style="color:#f59e0b;">${d.late}</div><div class="lbl">Late</div></div>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table><thead><tr><th>Date</th><th>Status</th><th>Time In</th><th>Punctuality</th></tr></thead>
+      <tbody>${d.records.map(r=>`<tr><td>${r.date}</td><td>${r.status}</td><td>${r.time_in||'—'}</td><td>${pBadge(r.status,r.punctuality)}</td></tr>`).join('')}
+      </tbody></table>
+    </div>`;
+}
+
+async function genMonthly(){
+  const dept=document.getElementById('repDept').value;
+  const year=document.getElementById('repYear').value;
+  const month=document.getElementById('repMonth').value||'';
+  const data=await api(`/report?dept=${encodeURIComponent(dept)}&year=${encodeURIComponent(year)}&month=${month}`);
+  document.getElementById('repContainer').innerHTML=`
+    <table><thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Total</th><th>Present</th><th>Absent</th><th>Late</th><th>Att%</th><th>Status</th></tr></thead>
+    <tbody>${data.map(s=>{const cls=pctClass(s.percent);return `<tr class="${s.is_low?'low-row':''}">
+      <td>${s.id}</td><td>${s.name}</td><td style="font-size:11px;">${s.dept}</td>
+      <td>${s.total_classes}</td><td style="color:#10b981;font-weight:600;">${s.present_days}</td>
+      <td style="color:#ef4444;font-weight:600;">${s.total_classes-s.present_days}</td>
+      <td style="color:#f59e0b;">${s.late_count}</td>
+      <td><span class="pct-badge ${cls}">${s.percent}%</span></td>
+      <td>${s.is_low?'<span class="b-low">⚠️ LOW</span>':'<span class="b-good">✅ Good</span>'}</td>
+    </tr>`;}).join('')}</tbody></table>`;
+}
+
+async function loadLowList(){
+  const data=await api('/report/low');
+  document.getElementById('repLowList').innerHTML=data.length===0
+    ? '<p style="color:#10b981;padding:20px;text-align:center;">🎉 No students below 75%!</p>'
+    : `<table><thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Year</th><th>Att%</th><th>Classes Needed</th></tr></thead>
+       <tbody>${data.map(s=>`<tr class="low-row"><td>${s.id}</td><td>${s.name}</td><td style="font-size:11px;">${s.dept}</td><td>${s.year}</td>
+         <td><span class="pct-badge pl">${s.percent}%</span></td>
+         <td style="color:#7c3aed;font-weight:600;">${s.classes_needed} more days</td></tr>`).join('')}
+       </tbody></table>`;
+}
+
+async function loadRepStudentsForFilter(){
+  if(!allStudents.length) allStudents=await api('/students');
+  const depts=[...new Set(allStudents.map(s=>s.dept))];
+  const ds=document.getElementById('repDept'); ds.innerHTML='<option>All Departments</option>';
+  depts.forEach(d=>ds.innerHTML+=`<option>${d}</option>`);
+}
+
+function exportCSV(){
+  const rows=document.querySelectorAll('#repContainer table tbody tr');
+  let csv='ID,Name,Dept,Year,Total,Present,Absent,Late,Att%\n';
+  rows.forEach(r=>{const c=r.querySelectorAll('td');csv+=`${c[0].innerText},${c[1].innerText},"${c[2].innerText}",${c[3].innerText},${c[4].innerText},${c[5].innerText},${c[6].innerText},${c[7].innerText}\n`;});
+  const a=document.createElement('a'); a.href='data:text/csv,'+encodeURIComponent(csv); a.download=`Report_${today()}.csv`; a.click();
+}
+
+function exportPDF(){
+  const cont=document.getElementById('repContainer').innerHTML;
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Attendance Report</title>
+    <style>body{font-family:Arial,sans-serif;padding:20px;}h2{color:#1e1b4b;}table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border:1px solid #ddd;padding:8px;text-align:center;}th{background:#f1f5f9;font-weight:bold;}</style>
+    </head><body><h2>Attendance Report — ${today()}</h2><p>Sree Siddarameshwara Polytechnic, Tiptur</p>${cont}</body></html>`);
+  w.document.close(); w.print();
+}
+
+// ── Settings ───────────────────────────────────────────────
+async function changePassword(){
+  const old=document.getElementById('oldPass').value;
+  const nw=document.getElementById('newPass').value;
+  const cf=document.getElementById('confPass').value;
+  const msg=document.getElementById('passMsg');
+  if(nw!==cf){ msg.style.display='block'; msg.style.color='#ef4444'; msg.innerText='❌ Passwords do not match'; return; }
+  const r=await api('/settings/change-password',{method:'POST',body:JSON.stringify({old_password:old,new_password:nw})});
+  msg.style.display='block';
+  if(r.error){ msg.style.color='#ef4444'; msg.innerText='❌ '+r.error; }
+  else{ msg.style.color='#10b981'; msg.innerText='✅ Password changed successfully!'; ['oldPass','newPass','confPass'].forEach(i=>document.getElementById(i).value=''); }
+}
+
+// ── Teacher Attendance ─────────────────────────────────────
+function setTeacherInfoBar(){
+  if(!currentTeacher) return;
+  const html=`<div class="tavatar">${currentTeacher.name.charAt(0)}</div>
+    <div><strong>${currentTeacher.name}</strong>
+    <div style="font-size:12px;color:#5b21b6;">${currentTeacher.subject} | ${currentTeacher.dept} | ${currentTeacher.year}</div></div>`;
+  document.getElementById('tInfoBar').innerHTML=html;
+  document.getElementById('tRepInfoBar').innerHTML=html;
+}
+
+async function loadTeacherAtt(){
+  if(!currentTeacher) return;
+  setTeacherInfoBar();
+  const d=document.getElementById('tAttDate').value; if(!d) return;
+  const locked=!isToday(d);
+  const notice=document.getElementById('tDateNotice');
+  if(locked){
+    notice.className='lock-notice locked-notice';
+    notice.innerHTML='🔒 Past date — View only. Only today\'s attendance can be edited.';
+  } else {
+    notice.className='lock-notice';
+    notice.innerHTML='✅ Today\'s attendance — editable.';
+  }
+  allStudents=await api(`/students?dept=${encodeURIComponent(currentTeacher.dept)}&year=${encodeURIComponent(currentTeacher.year)}`);
+  teacherAttMap=await api(`/attendance/${d}?dept=${encodeURIComponent(currentTeacher.dept)}&year=${encodeURIComponent(currentTeacher.year)}`);
+  renderTeacherAtt(locked);
+  loadTeacherSummary(d);
+}
+
+async function loadTeacherSummary(d){
+  const s=await api(`/teacher/summary?dept=${encodeURIComponent(currentTeacher.dept)}&year=${encodeURIComponent(currentTeacher.year)}&date=${d}`);
+  document.getElementById('ts_total').innerText=s.total;
+  document.getElementById('ts_present').innerText=s.present;
+  document.getElementById('ts_absent').innerText=s.absent;
+  document.getElementById('ts_pct').innerText=s.percent+'%';
+}
+
+function renderTeacherAtt(locked=false){
+  const q=(document.getElementById('tStuSearch').value||'').toLowerCase();
+  const f=allStudents.filter(s=>!q||s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q));
+  document.getElementById('tAttBody').innerHTML=f.map(s=>{
+    const r=teacherAttMap[s.id]||{status:'Present',time_in:null,punctuality:null};
+    if(locked){
+      return `<tr class="locked-row"><td>${s.id}</td><td>${s.name}</td>
+        <td>${r.status}</td><td>${r.time_in?r.time_in.slice(0,5):'—'}</td>
+        <td>${pBadge(r.status,r.punctuality)}</td></tr>`;
+    }
+    return `<tr><td>${s.id}</td><td>${s.name}</td>
+      <td><button class="sbtn pbtn ${r.status==='Present'?'active':''}" onclick="setTchAtt('${s.id}','Present')">P</button>
+          <button class="sbtn abtn ${r.status==='Absent'?'active':''}"  onclick="setTchAtt('${s.id}','Absent')">A</button></td>
+      <td>${r.status==='Absent'?'<span style="color:#94a3b8;">—</span>':`<input type="time" class="time-in" value="${r.time_in?r.time_in.slice(0,5):''}" onchange="setTchTime('${s.id}',this.value)">`}</td>
+      <td>${pBadge(r.status,r.punctuality)}</td></tr>`;
+  }).join('');
+}
+function setTchAtt(id,status){
+  if(!isToday(document.getElementById('tAttDate').value)) return;
+  if(!teacherAttMap[id]) teacherAttMap[id]={};
+  teacherAttMap[id].status=status;
+  if(status==='Present'&&!teacherAttMap[id].time_in) teacherAttMap[id].time_in=nowTime();
+  if(status==='Absent'){ teacherAttMap[id].time_in=null; teacherAttMap[id].punctuality=null; }
+  renderTeacherAtt(false);
+}
+function setTchTime(id,val){
+  if(!teacherAttMap[id]) teacherAttMap[id]={};
+  if(val){ teacherAttMap[id].time_in=val+':00'; const[h,m]=val.split(':').map(Number); teacherAttMap[id].punctuality=(h>10||(h===10&&m>30))?'Late':'On-time'; }
+  else{ teacherAttMap[id].time_in=null; teacherAttMap[id].punctuality=null; }
+  renderTeacherAtt(false);
+}
+function markAllTeacher(status){
+  if(!isToday(document.getElementById('tAttDate').value)){ toast('Can only edit today!','#ef4444'); return; }
+  allStudents.forEach(s=>{ if(!teacherAttMap[s.id]) teacherAttMap[s.id]={};
+    teacherAttMap[s.id].status=status;
+    if(status==='Present') teacherAttMap[s.id].time_in=teacherAttMap[s.id].time_in||nowTime();
+    else{ teacherAttMap[s.id].time_in=null; teacherAttMap[s.id].punctuality=null; }
+  });
+  renderTeacherAtt(false);
+}
+async function saveTeacherAtt(){
+  const d=document.getElementById('tAttDate').value;
+  if(!isToday(d)){ toast('Can only save today\'s attendance!','#ef4444'); return; }
+  const r=await api('/attendance',{method:'POST',body:JSON.stringify({date:d,records:teacherAttMap})});
+  if(r.error){ toast(r.error,'#ef4444'); return; }
+  teacherAttMap=await api(`/attendance/${d}?dept=${encodeURIComponent(currentTeacher.dept)}&year=${encodeURIComponent(currentTeacher.year)}`);
+  renderTeacherAtt(false); loadTeacherSummary(d); toast(r.message||'Saved! ✅');
+}
+
+function setTeacherRepInfoBar(){ if(currentTeacher) setTeacherInfoBar(); }
+
+async function loadTeacherReport(){
+  if(!currentTeacher) return;
+  const month=document.getElementById('tRepMonth').value||'';
+  const data=await api(`/report?dept=${encodeURIComponent(currentTeacher.dept)}&year=${encodeURIComponent(currentTeacher.year)}&month=${month}`);
+  document.getElementById('tRepContainer').innerHTML=`
+    <table><thead><tr><th>ID</th><th>Name</th><th>Total</th><th>Present</th><th>Absent</th><th>Late</th><th>Att%</th><th>Status</th></tr></thead>
+    <tbody>${data.map(s=>{const cls=pctClass(s.percent); return `<tr class="${s.is_low?'low-row':''}">
+      <td>${s.id}</td><td>${s.name}</td><td>${s.total_classes}</td>
+      <td style="color:#10b981;font-weight:600;">${s.present_days}</td>
+      <td style="color:#ef4444;font-weight:600;">${s.total_classes-s.present_days}</td>
+      <td style="color:#f59e0b;">${s.late_count}</td>
+      <td><span class="pct-badge ${cls}">${s.percent}%</span></td>
+      <td>${s.is_low?'<span class="b-low">⚠️ LOW</span>':'<span class="b-good">✅ Good</span>'}</td>
+    </tr>`;}).join('')}</tbody></table>`;
+}
+
+function exportTeacherCSV(){
+  const rows=document.querySelectorAll('#tRepContainer table tbody tr');
+  let csv='ID,Name,Total,Present,Absent,Late,Att%\n';
+  rows.forEach(r=>{const c=r.querySelectorAll('td');csv+=`${c[0].innerText},${c[1].innerText},${c[2].innerText},${c[3].innerText},${c[4].innerText},${c[5].innerText},${c[6].innerText}\n`;});
+  const a=document.createElement('a'); a.href='data:text/csv,'+encodeURIComponent(csv); a.download=`Report_${currentTeacher.name}_${today()}.csv`; a.click();
+}
+
+function exportTeacherPDF(){
+  const cont=document.getElementById('tRepContainer').innerHTML;
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Class Report</title>
+    <style>body{font-family:Arial,sans-serif;padding:20px;}h2{color:#1e1b4b;}table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border:1px solid #ddd;padding:8px;text-align:center;}th{background:#f1f5f9;}</style>
+    </head><body><h2>Class Report — ${currentTeacher.name}</h2><p>${currentTeacher.dept} | ${currentTeacher.year} | ${currentTeacher.subject}</p>${cont}</body></html>`);
+  w.document.close(); w.print();
+}
+
+// ── Parent Dashboard ───────────────────────────────────────
+async function loadParentDashboard(sid){
+  const info=await api('/attendance/student/'+sid);
+  if(info.error){ toast(info.error,'#ef4444'); return; }
+  const s=info.student, pct=info.percent;
+
+  document.getElementById('pName').innerText=s.name;
+  document.getElementById('pDeptYear').innerText=s.dept+' | '+s.year;
+  document.getElementById('p_total').innerText=info.total;
+  document.getElementById('p_present').innerText=info.present;
+  document.getElementById('p_absent').innerText=info.absent;
+  document.getElementById('p_late').innerText=info.late;
+  document.getElementById('ringPct').innerText=pct+'%';
+
+  // Warning banner
+  const wb=document.getElementById('pWarnBanner');
+  const needed=calcNeeded(info.present,info.total);
+  if(pct<50){
+    wb.innerHTML=`<div class="warn danger"><div class="warn-icon">🚨</div><div><div class="warn-title" style="color:#dc2626;">Critical! Attendance only ${pct}%</div><div class="warn-body" style="color:#b91c1c;">Dangerously below 75% minimum. Need <strong>${needed}</strong> consecutive present days to recover.</div></div></div>`;
+  } else if(pct<75){
+    wb.innerHTML=`<div class="warn warning"><div class="warn-icon">⚠️</div><div><div class="warn-title" style="color:#b45309;">Low Attendance — ${pct}%</div><div class="warn-body" style="color:#92400e;">Below 75% minimum required. Need <strong>${needed}</strong> more present days to reach 75%.</div></div></div>`;
+  } else if(pct<85){
+    wb.innerHTML=`<div class="warn caution"><div class="warn-icon">📢</div><div><div class="warn-title" style="color:#c2410c;">Caution — ${pct}%</div><div class="warn-body" style="color:#9a3412;">Above minimum but try to maintain above 85% for best results.</div></div></div>`;
+  } else {
+    wb.innerHTML=`<div class="warn good"><div class="warn-icon">✅</div><div><div class="warn-title" style="color:#065f46;">Excellent — ${pct}%</div><div class="warn-body" style="color:#047857;">Great attendance! Keep it up.</div></div></div>`;
+  }
+
+  // Donut chart
+  const pctColor=pct>=75?'#10b981':pct>=50?'#f59e0b':'#ef4444';
+  document.getElementById('ringPct').style.color=pctColor;
+  if(donutInst) donutInst.destroy();
+  donutInst=new Chart(document.getElementById('donutChart').getContext('2d'),{
+    type:'doughnut',
+    data:{datasets:[{data:[pct,100-pct],backgroundColor:[pctColor,'#e2e8f0'],borderWidth:0}]},
+    options:{cutout:'78%',plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:800}}
+  });
+
+  // Bar chart
+  if(barInst) barInst.destroy();
+  const cd=info.chart_data||[];
+  barInst=new Chart(document.getElementById('barChart').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:cd.map(r=>{const d=new Date(r.date);return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});}),
+      datasets:[{data:cd.map(r=>r.status==='Present'?1:0),backgroundColor:cd.map(r=>r.status==='Present'?'#10b981':'#ef4444'),borderRadius:6,barThickness:24}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw===1?'✅ Present':'❌ Absent'}}},scales:{y:{display:false,min:0,max:1.3},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+
+  // Last 5 days
+  const last5=(info.records||[]).slice(0,5);
+  document.getElementById('pLast5').innerHTML=last5.length===0
+    ? '<p style="color:#94a3b8;text-align:center;padding:16px;">No records yet.</p>'
+    : last5.map(r=>`<div class="day-row">
+        <div><div style="font-size:13px;font-weight:600;">${new Date(r.date).toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short'})}</div>
+        <div style="font-size:11px;color:#64748b;">${r.time_in?'🕐 '+r.time_in.slice(0,5):''}</div></div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${r.punctuality==='Late'?'<span class="b-late">⏰ Late</span>':''}
+          <span class="${r.status==='Present'?'b-present':'b-absent'}">${r.status==='Present'?'✅ Present':'❌ Absent'}</span>
+        </div></div>`).join('');
+}
+
+function calcNeeded(p,t){
+  if(t===0) return 0;
+  if((p/t)>=0.75) return 0;
+  let x=0;
+  while(x<300){ if((p+x)/(t+x)>=0.75) return x; x++; }
+  return '300+';
+}
+
+async function loadParentDateView(){
+  const d=document.getElementById('pViewDate').value; if(!d||!currentParentId) return;
+  const r=await api(`/attendance/student/${currentParentId}/datewise?date=${d}`);
+  const el=document.getElementById('pDateResult');
+  if(r.status==='No record'){
+    el.innerHTML=`<div style="padding:20px;background:#f8fafc;border-radius:16px;text-align:center;color:#94a3b8;">No attendance record found for ${d}.</div>`;
+  } else {
+    el.innerHTML=`<div class="day-row" style="max-width:400px;">
+      <div><div style="font-size:14px;font-weight:700;">${new Date(r.date).toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}</div>
+      <div style="font-size:12px;color:#64748b;margin-top:4px;">${r.time_in?'🕐 Arrived at '+r.time_in.slice(0,5):''}</div></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        ${pBadge(r.status,r.punctuality)}
+        <span class="${r.status==='Present'?'b-present':'b-absent'}">${r.status}</span>
+      </div></div>`;
+  }
+}
+
+async function loadParentMonthly(){
+  if(!currentParentId) return;
+  const month=document.getElementById('pMonthSel').value||'';
+  const info=await api('/attendance/student/'+currentParentId);
+  let records=info.records||[];
+  if(month) records=records.filter(r=>r.date.startsWith(month));
+  if(records.length===0){
+    document.getElementById('pMonthlyContent').innerHTML='<p style="color:#94a3b8;text-align:center;padding:20px;">No records for this month.</p>';
+    return;
+  }
+  document.getElementById('pMonthlyContent').innerHTML=`
+    <table><thead><tr><th>Date</th><th>Status</th><th>Time In</th><th>Punctuality</th></tr></thead>
+    <tbody>${records.map(r=>`<tr>
+      <td>${new Date(r.date).toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short'})}</td>
+      <td>${r.status}</td><td>${r.time_in?r.time_in.slice(0,5):'—'}</td>
+      <td>${pBadge(r.status,r.punctuality)}</td></tr>`).join('')}
+    </tbody></table>`;
+}
+
+async function loadParentNotifs(){
+  if(!currentParentId) return;
+  const info=await api('/attendance/student/'+currentParentId);
+  const notifs=info.notifications||[];
+  document.getElementById('pNotifList').innerHTML=notifs.length===0
+    ? '<p style="color:#94a3b8;text-align:center;padding:24px;">No notifications yet.</p>'
+    : notifs.map(n=>`<div class="notif-item ${n.type==='Absent'?'notif-absent':'notif-late'}">
+        <div style="font-size:22px;">${n.type==='Absent'?'❌':'⏰'}</div>
+        <div><div style="font-size:13px;font-weight:600;color:${n.type==='Absent'?'#dc2626':'#92400e'};">${n.type}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px;">${n.message}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px;">${n.date}</div></div>
+      </div>`).join('');
+}
+
+// ── Init ───────────────────────────────────────────────────
+window.onload=async()=>{
+  // Populate class dept dropdown
+  const ds=document.getElementById('clDept');
+  ds.innerHTML='<option>Select Dept</option>';
+  Object.keys(classData).forEach(d=>ds.innerHTML+=`<option>${d}</option>`);
+  // Hide all menu buttons
+  document.querySelectorAll('.menu button').forEach(b=>b.style.display='none');
+  // Preload students
+  allStudents=await api('/students');
+  // Populate report filters
+  const depts=[...new Set(allStudents.map(s=>s.dept))];
+  const rd=document.getElementById('repDept'); rd.innerHTML='<option>All Departments</option>';
+  depts.forEach(d=>rd.innerHTML+=`<option>${d}</option>`);
+  document.getElementById('repYear').innerHTML='<option>All Years</option><option>1st Year</option><option>2nd Year</option><option>3rd Year</option>';
+};
+</script>
+</body>
+</html>
