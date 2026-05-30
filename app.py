@@ -14,8 +14,8 @@ DB_CONFIG = {
     'database': 'railway',
     'port':     44293,
     'cursorclass': pymysql.cursors.DictCursor,
-    'ssl_disabled': True,
-    'connect_timeout': 30
+    'ssl':      {'ssl_disabled': False},
+    'connect_timeout': 60
 }
 
 def get_db():
