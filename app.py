@@ -1,3 +1,5 @@
+
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import date, datetime
@@ -8,13 +10,12 @@ app = Flask(__name__)
 CORS(app)
 
 DB_CONFIG = {
-    'host':     'junction.proxy.rlwy.net',
-    'user':     'root',
-    'password': 'adviWiOOhiMHKGeXoLIDpabzFJiXnxMV',
-    'database': 'railway',
-    'port':     44293,
+    'host':     'bxj99yuk8y03igriqid5-mysql.services.clever-cloud.com',
+    'user':     'uqzonzhsqgv2ntzk',
+    'password': 'cOUVcUnLrFQ90Kdh6fcN',
+    'database': 'bxj99yuk8y03igriqid5',
+    'port':     3306,
     'cursorclass': pymysql.cursors.DictCursor,
-    'ssl':      {'ssl_disabled': False},
     'connect_timeout': 60
 }
 
