@@ -1,19 +1,25 @@
 from flask import Flask, request, jsonify
-from flask_mysqldb import MySQL
 from flask_cors import CORS
 from datetime import date, datetime
+import pymysql
+import pymysql.cursors
 
 app = Flask(__name__)
 CORS(app)
 
-app.config['MYSQL_HOST']        = 'junction.proxy.rlwy.net'
-app.config['MYSQL_USER']        = 'root'
-app.config['MYSQL_PASSWORD']    = 'adviWiOOhiMHKGeXoLIDpabzFJiXnxMV'
-app.config['MYSQL_DB']          = 'railway'
-app.config['MYSQL_PORT']        = 44293
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+DB_CONFIG = {
+    'host':     'junction.proxy.rlwy.net',
+    'user':     'root',
+    'password': 'adviWiOOhiMHKGeXoLIDpabzFJiXnxMV',
+    'database': 'railway',
+    'port':     44293,
+    'cursorclass': pymysql.cursors.DictCursor,
+    'ssl_disabled': True,
+    'connect_timeout': 30
+}
 
-mysql = MySQL(app)
+def get_db():
+    return pymysql.connect(**DB_CONFIG)
 
 LATE_CUTOFF = datetime.strptime("10:30:00", "%H:%M:%S").time()
 
@@ -27,7 +33,8 @@ def get_punctuality(time_str):
         return None
 
 def get_admin_password():
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT value FROM admin_settings WHERE setting_key='admin_password'")
     row = cur.fetchone()
     cur.close()
@@ -49,7 +56,8 @@ def login():
         return jsonify({'success': True, 'role': 'admin'})
 
     # Teacher (email + password)
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT * FROM teachers WHERE email=%s AND password=%s", (username, password))
     teacher = cur.fetchone()
     if teacher:
@@ -79,10 +87,12 @@ def change_password():
         return jsonify({'error': 'Current password is incorrect'}), 400
     if not new_pass or len(new_pass) < 4:
         return jsonify({'error': 'New password must be at least 4 characters'}), 400
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("UPDATE admin_settings SET value=%s WHERE setting_key='admin_password'", (new_pass,))
-    mysql.connection.commit()
+    conn.commit()
     cur.close()
+    conn.close()
     return jsonify({'success': True, 'message': 'Password changed successfully'})
 
 
@@ -109,6 +119,7 @@ def get_students():
     cur.execute(query, params)
     students = cur.fetchall()
     cur.close()
+    conn.close()
     return jsonify(students)
 
 @app.route('/api/students', methods=['POST'])
@@ -117,12 +128,13 @@ def add_student():
     if not data.get('id') or not data.get('name'):
         return jsonify({'error': 'ID and Name required'}), 400
     try:
-        cur = mysql.connection.cursor()
+        conn = get_db()
+    cur = conn.cursor()
         cur.execute(
             "INSERT INTO students (id,name,email,phone,dept,year) VALUES (%s,%s,%s,%s,%s,%s)",
             (data['id'], data['name'], data.get('email',''), data.get('phone',''), data['dept'], data['year'])
         )
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
         return jsonify({'success': True})
     except Exception as e:
@@ -132,12 +144,13 @@ def add_student():
 def update_student(student_id):
     data = request.json
     try:
-        cur = mysql.connection.cursor()
+        conn = get_db()
+    cur = conn.cursor()
         cur.execute(
             "UPDATE students SET name=%s,email=%s,phone=%s,dept=%s,year=%s WHERE id=%s",
             (data['name'], data.get('email',''), data.get('phone',''), data['dept'], data['year'], student_id)
         )
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
         return jsonify({'success': True})
     except Exception as e:
@@ -146,9 +159,10 @@ def update_student(student_id):
 @app.route('/api/students/<student_id>', methods=['DELETE'])
 def delete_student(student_id):
     try:
-        cur = mysql.connection.cursor()
+        conn = get_db()
+    cur = conn.cursor()
         cur.execute("DELETE FROM students WHERE id=%s", (student_id,))
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
         return jsonify({'success': True})
     except Exception as e:
@@ -157,7 +171,8 @@ def delete_student(student_id):
 @app.route('/api/students/<student_id>/report', methods=['GET'])
 def student_individual_report(student_id):
     """Individual student full report for admin"""
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT * FROM students WHERE id=%s", (student_id,))
     student = cur.fetchone()
     if not student:
@@ -182,10 +197,12 @@ def student_individual_report(student_id):
 
 @app.route('/api/teachers', methods=['GET'])
 def get_teachers():
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT id,name,email,dept,subject,year FROM teachers ORDER BY name")
     teachers = cur.fetchall()
     cur.close()
+    conn.close()
     return jsonify(teachers)
 
 @app.route('/api/teachers', methods=['POST'])
@@ -194,12 +211,13 @@ def add_teacher():
     if not data.get('name') or not data.get('email') or not data.get('password'):
         return jsonify({'error': 'Name, email and password required'}), 400
     try:
-        cur = mysql.connection.cursor()
+        conn = get_db()
+    cur = conn.cursor()
         cur.execute(
             "INSERT INTO teachers (name,email,password,dept,subject,year) VALUES (%s,%s,%s,%s,%s,%s)",
             (data['name'],data['email'],data['password'],data['dept'],data['subject'],data['year'])
         )
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
         return jsonify({'success': True})
     except Exception as e:
@@ -209,12 +227,13 @@ def add_teacher():
 def update_teacher(tid):
     data = request.json
     try:
-        cur = mysql.connection.cursor()
+        conn = get_db()
+    cur = conn.cursor()
         cur.execute(
             "UPDATE teachers SET name=%s,email=%s,dept=%s,subject=%s,year=%s WHERE id=%s",
             (data['name'],data['email'],data['dept'],data['subject'],data['year'],tid)
         )
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
         return jsonify({'success': True})
     except Exception as e:
@@ -223,9 +242,10 @@ def update_teacher(tid):
 @app.route('/api/teachers/<int:tid>', methods=['DELETE'])
 def delete_teacher(tid):
     try:
-        cur = mysql.connection.cursor()
+        conn = get_db()
+    cur = conn.cursor()
         cur.execute("DELETE FROM teachers WHERE id=%s", (tid,))
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
         return jsonify({'success': True})
     except Exception as e:
@@ -263,7 +283,8 @@ def save_attendance():
     if not att_date or not records:
         return jsonify({'error': 'date and records required'}), 400
     try:
-        cur = mysql.connection.cursor()
+        conn = get_db()
+    cur = conn.cursor()
         for student_id, info in records.items():
             status  = info.get('status', 'Present')
             time_in = info.get('time_in')
@@ -302,7 +323,7 @@ def save_attendance():
                         (student_id, att_date, msg, msg)
                     )
 
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
         return jsonify({'success': True, 'message': f'Attendance saved for {att_date}'})
     except Exception as e:
@@ -315,7 +336,8 @@ def save_attendance():
 
 @app.route('/api/attendance/student/<student_id>', methods=['GET'])
 def get_student_attendance(student_id):
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT * FROM students WHERE id=%s", (student_id,))
     student = cur.fetchone()
     if not student:
@@ -355,7 +377,8 @@ def get_student_attendance(student_id):
 def parent_datewise(student_id):
     """Parent reads attendance for a specific date — read only"""
     att_date = request.args.get('date', date.today().isoformat())
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute(
         "SELECT date,status,time_in,punctuality FROM attendance WHERE student_id=%s AND date=%s",
         (student_id, att_date)
@@ -428,12 +451,14 @@ def report():
         pct = round((p/t)*100) if t>0 else 100
         result.append({**s,'percent':pct,'late_count':int(l),'total_classes':t,'present_days':int(p),'is_low':pct<75})
     cur.close()
+    conn.close()
     return jsonify(result)
 
 @app.route('/api/report/low', methods=['GET'])
 def low_attendance_list():
     """Only students below 75%"""
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT * FROM students ORDER BY name")
     students = cur.fetchall()
     result = []
@@ -444,6 +469,7 @@ def low_attendance_list():
         if pct < 75:
             result.append({**s,'percent':pct,'classes_needed':max(0,int((0.75*(t+1)-p)/(1-0.75)) if (t+p)>0 else 0)})
     cur.close()
+    conn.close()
     return jsonify(result)
 
 
@@ -453,20 +479,23 @@ def low_attendance_list():
 
 @app.route('/api/classes', methods=['GET'])
 def get_classes():
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT * FROM classes ORDER BY dept,year,semester")
     classes = cur.fetchall()
     cur.close()
+    conn.close()
     return jsonify(classes)
 
 @app.route('/api/classes', methods=['POST'])
 def add_class():
     data = request.json
     try:
-        cur = mysql.connection.cursor()
+        conn = get_db()
+    cur = conn.cursor()
         cur.execute("INSERT INTO classes (dept,year,semester,subject) VALUES (%s,%s,%s,%s)",
                     (data['dept'],data['year'],data['semester'],data['subject']))
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
         return jsonify({'success': True})
     except Exception as e:
@@ -475,9 +504,10 @@ def add_class():
 @app.route('/api/classes/<int:cid>', methods=['DELETE'])
 def delete_class(cid):
     try:
-        cur = mysql.connection.cursor()
+        conn = get_db()
+    cur = conn.cursor()
         cur.execute("DELETE FROM classes WHERE id=%s", (cid,))
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
         return jsonify({'success': True})
     except Exception as e:
@@ -494,7 +524,8 @@ def teacher_summary():
     dept      = request.args.get('dept', '')
     year      = request.args.get('year', '')
     att_date  = request.args.get('date', date.today().isoformat())
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT COUNT(*) as total FROM students WHERE dept=%s AND year=%s", (dept, year))
     total = cur.fetchone()['total']
     cur.execute("SELECT COUNT(*) as c FROM attendance a JOIN students s ON a.student_id=s.id WHERE s.dept=%s AND s.year=%s AND a.date=%s AND a.status='Present'", (dept,year,att_date))
